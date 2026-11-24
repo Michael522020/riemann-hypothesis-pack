@@ -69,7 +69,7 @@ git checkout <完整 sha>
 # 然后逐文件比对，或直接比对 payload 哈希（见下）
 ```
 
-**payload 哈希**（对排序后的逐文件 sha256 清单再取一次 sha256）是一个可以把「整份源码」压缩成一个值的锚点：
+**payload 哈希**（对「按路径排序的逐文件 sha256 清单」再取一次 sha256）是一个可以把「整份源码」压缩成一个值的锚点：
 
 | 提交 | payload sha256 |
 |---|---|
@@ -79,8 +79,14 @@ git checkout <完整 sha>
 payload 哈希的算法：
 
 ```bash
+# 从源码树现算
 find src -name '*.lean' -type f -print0 | sort -z | xargs -0 sha256sum | sha256sum
+
+# 从本仓库发布的清单复算（清单本身就已经是这个顺序）
+zcat files-sha256sums.txt.gz | sha256sum
 ```
+
+> ⚠️ **不要对清单再排序一次。** 清单按**路径**排序（`sort -z` 的顺序），不是按哈希排序。按行再排一次会得到 `167d6e3e8ddca19b0a72eff5b4019fab0b6cf810aaeae28c5330144f1d7fcbc7` —— 一个看起来同样合法、但不一样的值。这是「顺序敏感的哈希」最典型的翻车方式。
 
 ---
 
